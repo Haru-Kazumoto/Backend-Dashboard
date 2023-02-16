@@ -26,7 +26,7 @@ public class Employee implements Serializable {
     private String name;
 
     @Column(unique = true, nullable = false)
-    private String NumberEmployee;
+    private String numberEmployee;
 
     @Column(unique = true, nullable = false)
     private String email;
@@ -39,4 +39,6 @@ public class Employee implements Serializable {
 
     @Temporal(TemporalType.DATE)
     private Date dateJoin = new Date(System.currentTimeMillis());
+
+
 }

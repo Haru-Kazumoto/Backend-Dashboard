@@ -9,9 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -20,21 +18,30 @@ public class EmployeeServiceImpl implements EmployeeService{
     private final EmployeeRepository repository;
 
     @Override
-    public Employee createEmployee(Employee data) {
-        try{
+    public Employee createEmployee(Employee data) throws DataIntegrityViolationException {
+        try {
             return repository.save(data);
-        } catch (DataIntegrityViolationException exception){
+        } catch (DataIntegrityViolationException exception) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,exception.getMessage());
+        }
+    }
+
+    @Override
+    public Iterable<Employee> createBatch(Iterable<Employee> employees) {
+        try{
+            return repository.saveAll(employees);
+        } catch(DataIntegrityViolationException exception){
             throw new ResponseStatusException(HttpStatus.CONFLICT, exception.getMessage());
         }
     }
 
     @Override
-    public List<Employee> createMultipleEmployee(List<Employee> dataMultiple) {
-        return repository.saveAll(dataMultiple);
+    public List<Employee> getAllEmployee() {
+        return repository.findAll();
     }
 
     @Override
-    public List<Employee> getAllEmployee() {
-        return repository.findAll();
+    public void removeById(Integer id) {
+        repository.deleteById(id);
     }
 }

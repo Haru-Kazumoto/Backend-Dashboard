@@ -2,26 +2,29 @@ package dev.pack.controller;
 
 import dev.pack.dto.EmployeeDTO;
 import dev.pack.dto.ResponseData;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import dev.pack.model.Employee;
 import dev.pack.service.interfaces.EmployeeService;
 import jakarta.validation.Valid;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(path = "api/v1/employee")
 public class EmployeeController {
 
-    private final ResponseData<Employee> dataResponse = new ResponseData<>();
+    public ResponseData<Employee> dataResponse = new ResponseData<>();
+    Map<String, Object> messageError = new HashMap<>();
+    public Map<String, String> messageResult = new HashMap<>();
 
     private final EmployeeService service;
     private final ModelMapper modelMapper;
@@ -36,16 +39,35 @@ public class EmployeeController {
             dataResponse.setPayload(service.createEmployee(employee));
 
             return ResponseEntity.accepted().body(dataResponse);
+        } catch(ResponseStatusException ex){
+            List<String> dataError = List.of(
+                    "Duplicate Data"
+            );
+
+            messageError.put("Status", HttpStatus.CONFLICT);
+            messageError.put("Message", dataError);
+
+            return ResponseEntity.status(ex.getStatusCode()).body(messageError);
+        }
+    }
+
+    @PostMapping(path = "/create-all")
+    public ResponseEntity<?> createBatch(@RequestBody @Valid Employee[] employees){
+        ResponseData<Iterable<Employee>> responseMultipleData = new ResponseData<>();
+        try{
+            responseMultipleData.setStatus(HttpStatus.CREATED);
+            responseMultipleData.setPayload(service.createBatch(Arrays.asList(employees)));
+
+            return ResponseEntity.accepted().body(responseMultipleData);
         } catch (ResponseStatusException exception){
-            Map<String, Object> dataMessage = new HashMap<>();
             List<String> dataError = List.of(
                     "Duplicate unique data."
             );
 
-            dataMessage.put("Status", HttpStatus.CONFLICT);
-            dataMessage.put("Message", dataError);
+            messageError.put("Status", HttpStatus.CONFLICT);
+            messageError.put("Message", dataError);
 
-            return ResponseEntity.status(exception.getStatusCode()).body(dataMessage);
+            return ResponseEntity.status(exception.getStatusCode()).body(messageError);
         }
     }
 
@@ -57,5 +79,14 @@ public class EmployeeController {
         data.setPayload(service.getAllEmployee());
 
         return ResponseEntity.ok(data);
+    }
+
+    @ExceptionHandler(EmptyResultDataAccessException.class)
+    @DeleteMapping(path = "/delete/{id}")
+    public ResponseEntity<Map<String, String>> deleteRecordById(
+            @PathVariable Integer id){
+        service.removeById(id);
+        messageResult.put("result", String.format("Data with id %s has deleted", id));
+        return ResponseEntity.accepted().body(messageResult);
     }
 }

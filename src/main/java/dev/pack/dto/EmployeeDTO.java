@@ -19,7 +19,7 @@ public class EmployeeDTO {
     @NotEmpty(message = "Id employee cannot be empty.")
     @Size(min = 3, max = 5, message = "Id employee must be in 3 to 5 characters.")
     @Pattern(regexp = "EM[0-9]+", message = "Id pattern must start with 'EM'.")
-    private String NumberEmployee;
+    private String numberEmployee;
 
     @Email(message = "Email pattern doesn't valid.")
     @NotEmpty(message = "Email is required.")
@@ -29,5 +29,5 @@ public class EmployeeDTO {
     private Gender gender;
 
     @NotNull(message = "Job Role is required.")
-    private JobRole jobRole;
+    private JobRole role;
 }

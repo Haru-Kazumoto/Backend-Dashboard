@@ -2,13 +2,11 @@ package dev.pack.controller;
 
 import dev.pack.dto.EmployeeDTO;
 import dev.pack.dto.ResponseData;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import dev.pack.model.Employee;
 import dev.pack.service.interfaces.EmployeeService;
 import jakarta.validation.Valid;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +18,7 @@ import java.util.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(path = "api/v1/employee")
+@CrossOrigin(originPatterns = "http://localhost:3001")
 public class EmployeeController {
 
     public ResponseData<Employee> dataResponse = new ResponseData<>();
@@ -30,8 +29,7 @@ public class EmployeeController {
     private final ModelMapper modelMapper;
 
     @PostMapping(path = "/create")
-    public ResponseEntity<?> createData(
-            @RequestBody @Valid EmployeeDTO dto) {
+    public ResponseEntity<?> createData(@RequestBody @Valid EmployeeDTO dto){
         try{
             Employee employee = modelMapper.map(dto, Employee.class);
 
@@ -53,12 +51,12 @@ public class EmployeeController {
 
     @PostMapping(path = "/create-all")
     public ResponseEntity<?> createBatch(@RequestBody @Valid Employee[] employees){
-        ResponseData<Iterable<Employee>> responseMultipleData = new ResponseData<>();
+//        ResponseData<Iterable<Employee>> responseMultipleData = new ResponseData<>();
         try{
-            responseMultipleData.setStatus(HttpStatus.CREATED);
-            responseMultipleData.setPayload(service.createBatch(Arrays.asList(employees)));
-
-            return ResponseEntity.accepted().body(responseMultipleData);
+//            responseMultipleData.setStatus(HttpStatus.CREATED);
+//            responseMultipleData.setPayload(service.createBatch(Arrays.asList(employees)));
+            service.createBatch(Arrays.asList(employees));
+            return ResponseEntity.accepted().body(employees);
         } catch (ResponseStatusException exception){
             List<String> dataError = List.of(
                     "Duplicate unique data."
@@ -72,13 +70,13 @@ public class EmployeeController {
     }
 
     @GetMapping(path = "/get-all")
-    public ResponseEntity<ResponseData<List<Employee>>> findAll(){
-        ResponseData<List<Employee>> data = new ResponseData<>();
+    public ResponseEntity<?> findAll(){
+//        ResponseData<List<Employee>>
+//        ResponseData<List<Employee>> data = new ResponseData<>();
 
-        data.setStatus(HttpStatus.OK);
-        data.setPayload(service.getAllEmployee());
-
-        return ResponseEntity.ok(data);
+//        data.setStatus(HttpStatus.OK);
+//        data.setPayload(service.getAllEmployee());
+        return ResponseEntity.ok(service.getAllEmployee());
     }
 
     @ExceptionHandler(EmptyResultDataAccessException.class)
@@ -89,4 +87,9 @@ public class EmployeeController {
         messageResult.put("result", String.format("Data with id %s has deleted", id));
         return ResponseEntity.accepted().body(messageResult);
     }
+
+//    @GetMapping(path = "/search")
+//    public ResponseEntity<List<Employee>> findEmployeeByName(@RequestBody SearchKey<List<String>> key){
+//        return ResponseEntity.ok(service.findEmployeeByName(key));
+//    }
 }

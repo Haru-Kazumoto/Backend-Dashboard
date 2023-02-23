@@ -1,5 +1,6 @@
 package dev.pack.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import dev.pack.model.enumeration.Gender;
 import dev.pack.model.enumeration.JobRole;
 import jakarta.persistence.*;
@@ -16,6 +17,7 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Table(name = "employee_tbl")
 public class Employee implements Serializable {
 
@@ -23,13 +25,8 @@ public class Employee implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer Id;
 
+    @Column(nullable = false)
     private String name;
-
-    @Column(unique = true, nullable = false)
-    private String numberEmployee;
-
-    @Column(unique = true, nullable = false)
-    private String email;
 
     @Enumerated(EnumType.STRING)
     private Gender gender;
@@ -37,8 +34,13 @@ public class Employee implements Serializable {
     @Enumerated(EnumType.STRING)
     private JobRole role;
 
-    @Temporal(TemporalType.DATE)
-    private Date dateJoin = new Date(System.currentTimeMillis());
+    @Column(unique = true, nullable = false)
+    private String email;
 
+    @Column(unique = true, nullable = false)
+    private String numberEmployee;
+
+//    @Temporal(TemporalType.DATE)
+//    private Date dateJoin = new Date(System.currentTimeMillis());
 
 }

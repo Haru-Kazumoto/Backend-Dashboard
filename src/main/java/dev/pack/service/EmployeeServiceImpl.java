@@ -44,4 +44,13 @@ public class EmployeeServiceImpl implements EmployeeService{
     public void removeById(Integer id) {
         repository.deleteById(id);
     }
+
+    @Override
+    public List<Employee> findEmployeeByName(String name) {
+        Optional<List<Employee>> data = Optional.ofNullable(repository.findByNameContains(name));
+        if(data.isPresent()){
+            return repository.findByNameContains(name);
+        }
+        return List.of();
+    }
 }

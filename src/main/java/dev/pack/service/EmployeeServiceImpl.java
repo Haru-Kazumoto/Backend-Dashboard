@@ -18,9 +18,9 @@ public class EmployeeServiceImpl implements EmployeeService{
     private final EmployeeRepository repository;
 
     @Override
-    public Employee createEmployee(Employee data) throws DataIntegrityViolationException {
+    public Employee createEmployee(Employee employee) throws DataIntegrityViolationException {
         try {
-            return repository.save(data);
+            return repository.save(employee);
         } catch (DataIntegrityViolationException exception) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,exception.getMessage());
         }
@@ -41,6 +41,15 @@ public class EmployeeServiceImpl implements EmployeeService{
     }
 
     @Override
+    public Employee updateById(Employee employee) {
+        try {
+            return repository.save(employee);
+        } catch (DataIntegrityViolationException exception) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,exception.getMessage());
+        }
+    }
+
+    @Override
     public void removeById(Integer id) {
         repository.deleteById(id);
     }
@@ -52,5 +61,10 @@ public class EmployeeServiceImpl implements EmployeeService{
             return repository.findByNameContains(name);
         }
         return List.of();
+    }
+
+    @Override
+    public List<Object[]> getEmployeeCountRole() {
+        return repository.getEmployeeCountByRole();
     }
 }

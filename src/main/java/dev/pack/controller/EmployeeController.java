@@ -2,7 +2,10 @@ package dev.pack.controller;
 
 import dev.pack.dto.EmployeeDTO;
 import dev.pack.dto.ResponseData;
+import dev.pack.model.enumeration.JobRole;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import dev.pack.model.Employee;
 import dev.pack.service.interfaces.EmployeeService;
@@ -15,6 +18,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(path = "api/v1/employee")
@@ -51,10 +55,7 @@ public class EmployeeController {
 
     @PostMapping(path = "/create-all")
     public ResponseEntity<?> createBatch(@RequestBody @Valid Employee[] employees){
-//        ResponseData<Iterable<Employee>> responseMultipleData = new ResponseData<>();
         try{
-//            responseMultipleData.setStatus(HttpStatus.CREATED);
-//            responseMultipleData.setPayload(service.createBatch(Arrays.asList(employees)));
             service.createBatch(Arrays.asList(employees));
             return ResponseEntity.accepted().body(employees);
         } catch (ResponseStatusException exception){
@@ -70,26 +71,54 @@ public class EmployeeController {
     }
 
     @GetMapping(path = "/get-all")
-    public ResponseEntity<?> findAll(){
-//        ResponseData<List<Employee>>
-//        ResponseData<List<Employee>> data = new ResponseData<>();
-
-//        data.setStatus(HttpStatus.OK);
-//        data.setPayload(service.getAllEmployee());
+    public ResponseEntity<?> findAll(HttpServletRequest request){
+        String clientPort = request.getHeader("X-Client-Port");
+        log.info("Request received from client on port {}.", clientPort);
         return ResponseEntity.ok(service.getAllEmployee());
     }
 
     @ExceptionHandler(EmptyResultDataAccessException.class)
     @DeleteMapping(path = "/delete/{id}")
-    public ResponseEntity<Map<String, String>> deleteRecordById(
-            @PathVariable Integer id){
+    public ResponseEntity<Map<String, String>> deleteRecordById(@PathVariable Integer id){
         service.removeById(id);
         messageResult.put("result", String.format("Data with id %s has deleted", id));
         return ResponseEntity.accepted().body(messageResult);
     }
 
-//    @GetMapping(path = "/search")
-//    public ResponseEntity<List<Employee>> findEmployeeByName(@RequestBody SearchKey<List<String>> key){
-//        return ResponseEntity.ok(service.findEmployeeByName(key));
-//    }
+    @PutMapping(path = "/update/{id}")
+    public ResponseEntity<?> updateEmployee(
+            @PathVariable Integer id,
+            @RequestBody @Valid Employee employee){
+        try{
+            dataResponse.setStatus(HttpStatus.OK);
+            dataResponse.setMessage(List.of(String.format("Data with id %s has updated", id)));
+            dataResponse.setPayload(service.updateById(employee));
+
+            return ResponseEntity.accepted().body(dataResponse);
+        } catch(ResponseStatusException ex){
+            List<String> dataError = List.of(
+                    "Duplicate Data"
+            );
+
+            messageError.put("Status", HttpStatus.CONFLICT);
+            messageError.put("Message", dataError);
+
+            return ResponseEntity.status(ex.getStatusCode()).body(messageError);
+        }
+    }
+
+    @GetMapping(path = "/count-roles")
+    public Map<String, Integer> getJobRoles(){
+        Map<String, Integer> jobRoles = new HashMap<>();
+        List<Object[]> employeeCountByRole = service.getEmployeeCountRole();
+
+        for(Object[] result : employeeCountByRole) {
+            JobRole role = (JobRole) result[0];
+            Long count = (Long) result[1];
+
+            jobRoles.put(role.toString(), count.intValue());
+        }
+
+        return jobRoles;
+    }
 }
